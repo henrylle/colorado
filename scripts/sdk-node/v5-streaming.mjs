@@ -4,7 +4,7 @@
 import { BedrockRuntimeClient, ConverseStreamCommand } from "@aws-sdk/client-bedrock-runtime";
 import { createInterface } from "readline";
 import { readFileSync } from "fs";
-import { dirname, join } from "path";
+import { dirname, join } from "path"; 
 import { fileURLToPath } from "url";
 
 const MODEL_ID = "us.anthropic.claude-sonnet-4-6";
