@@ -31,6 +31,17 @@ function consultarMatricula({ email }) {
   return aluno ? { encontrado: true, ...aluno } : { encontrado: false };
 }
 
+// ponytail: link fixo; troca por gateway (Stripe/Pagar.me) quando existir checkout de verdade
+const LINK_PAGAMENTO = "https://formacaoaws.com.br/link-pagamento";
+
+function gerarLinkPagamento({ email }) {
+  const limpo = (email ?? "").trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(limpo)) {
+    return { gerado: false, motivo: "e-mail inválido" };
+  }
+  return { gerado: true, email: limpo, link: LINK_PAGAMENTO };
+}
+
 // 2. A declaração da tool para o modelo
 //    description é o que o modelo lê pra decidir SE chama a tool.
 //    Prompt ruim aqui = tool que nunca dispara (ou dispara sempre).
@@ -55,11 +66,32 @@ const toolConfig = {
         },
       },
     },
+    {
+      toolSpec: {
+        name: "gerar_link_pagamento",
+        description:
+          "Gera o link de pagamento do ingresso. " +
+          "Use quando a pessoa quiser comprar, pagar ou finalizar a compra. " +
+          "Só chame depois que a pessoa informar o e-mail.",
+        inputSchema: {
+          json: {
+            type: "object",
+            properties: {
+              email: { type: "string", description: "E-mail para envio do link de pagamento" },
+            },
+            required: ["email"],
+          },
+        },
+      },
+    },
   ],
 };
 
 // Executor local: nome da tool -> função
-const EXECUTORES = { consultar_matricula: consultarMatricula };
+const EXECUTORES = {
+  consultar_matricula: consultarMatricula,
+  gerar_link_pagamento: gerarLinkPagamento,
+};
 
 const MAX_TURNOS_TOOL = 5;
 
@@ -73,8 +105,9 @@ console.log("===================================================");
 console.log("");
 console.log("📄 System prompt carregado de: prompt-valendo.txt");
 console.log("🗄️  Cache: 1h (system prompt)");
-console.log("🔧 Tool disponível: consultar_matricula(email)");
+console.log("🔧 Tools disponíveis: consultar_matricula(email), gerar_link_pagamento(email)");
 console.log("💡 Teste: 'minha compra saiu? meu email é maria@email.com'");
+console.log("💡 Teste: 'quero pagar, meu email é joao@email.com'");
 console.log("💡 Digite 'sair' para encerrar");
 console.log("");
 

@@ -199,13 +199,11 @@ Se comprar o VIP ainda vai ter aula extra sobre CDN e Proteção de Load Balance
 - [X] Informar prazo exato de disponibilidade?
 
 ---
-Link do ingresso normal: https://pay.hotmart.com/X100452315K?checkoutMode=10&offDiscount=CUPOM_LOTE0_BIA_MAR_26&sck=utm_campaign=whatsapp|utm_source=checkout-agente-ia
+Link de pagamento: NUNCA escreva um link de memória. Peça o e-mail e use a tool
+`gerar_link_pagamento`. O link a enviar é exatamente o que a tool devolver.
 
-Link do ingresso VIP: 
-https://links.formacaoaws.com.br/hCbA?sck=utm_campaign=whatsapp|utm_source=checkout-agente-ia
-
-> - [ ] O agente pode acessar dados do aluno (verificar matrícula, email)?
-    Ainda não tenho tool para isso (mais pra frente teremos).
+> - [x] O agente pode acessar dados do aluno (verificar matrícula, email)?
+    Sim, via tool `consultar_matricula` (pede o e-mail antes).
 > - [ ] Limite de mensagens antes de escalar? 
     - Não vamos se preocupar com isso, mas me avise quando passar de 20 interacoes.
 > - [x] Horário de funcionamento (responde 24h ou só horário comercial)?
