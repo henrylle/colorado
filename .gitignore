@@ -1,0 +1,6 @@
+scripts/sdk-node-exemplo/node_modules/*
+scripts/sdk-node/node_modules/*
+scripts/sdk-node-exemplo/*
+package-lock.json
+apoio/*
+.DS_Store

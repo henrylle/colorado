@@ -33,7 +33,7 @@ EXPLICITAMENTE escritos acima.
  - Responda APENAS com base nas informações fornecidas acima.
 Se a informação não estiver presente, diga que não sabe.
  - Se perguntarem sobre qualquer produto que não consta aqui, responda:
-"Não tenho essa informação. Vou pedir para alguém do time do Henrylle te ajudar."
+"Não tenho essa informação. Vou pedir para alguém do time do Henrylle entrar em contato com você."
 
 Toms para você aprender como tratar o lead.
 
