@@ -11,7 +11,7 @@ const MODEL_ID = "us.anthropic.claude-sonnet-4-6";
 
 const client = new BedrockRuntimeClient({
   region: "us-east-1",
-  profile: "seattle",
+  profile: "formacaoaws",
 });
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
