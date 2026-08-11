@@ -39,6 +39,9 @@ function gerarLinkPagamento({ email }) {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(limpo)) {
     return { gerado: false, motivo: "e-mail inválido" };
   }
+  // ponytail: a checagem de pagamento duplicado é feita pelo MODELO, encadeando
+  // consultar_matricula antes desta tool (é o comportamento que a aula demonstra).
+  // Em produção, repetir a checagem aqui dentro — prompt não é garantia.
   return { gerado: true, email: limpo, link: LINK_PAGAMENTO };
 }
 
@@ -72,7 +75,11 @@ const toolConfig = {
         description:
           "Gera o link de pagamento do ingresso. " +
           "Use quando a pessoa quiser comprar, pagar ou finalizar a compra. " +
-          "Só chame depois que a pessoa informar o e-mail.",
+          "Só chame depois que a pessoa informar o e-mail. " +
+          "OBRIGATÓRIO antes de chamar esta tool: chame consultar_matricula com o " +
+          "mesmo e-mail. Se voltar status 'confirmado', NÃO chame esta tool — a " +
+          "pessoa já pagou, avise isso e informe o número do pedido. " +
+          "Só gere o link se a matrícula não existir ou não estiver confirmada.",
         inputSchema: {
           json: {
             type: "object",
@@ -107,7 +114,8 @@ console.log("📄 System prompt carregado de: prompt-valendo.txt");
 console.log("🗄️  Cache: 1h (system prompt)");
 console.log("🔧 Tools disponíveis: consultar_matricula(email), gerar_link_pagamento(email)");
 console.log("💡 Teste: 'minha compra saiu? meu email é maria@email.com'");
-console.log("💡 Teste: 'quero pagar, meu email é joao@email.com'");
+console.log("💡 Teste (encadeia 2 tools): 'quero pagar, meu email é joao@email.com'");
+console.log("💡 Teste (bloqueia duplicado): 'quero pagar, meu email é maria@email.com'");
 console.log("💡 Digite 'sair' para encerrar");
 console.log("");
 

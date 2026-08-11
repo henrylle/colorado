@@ -1,0 +1,358 @@
+<title>Onde o Titan entra no RAG</title>
+
+<style>
+  :root {
+    --bg:        #F1F0EC;
+    --surface:   #FFFFFF;
+    --ink:       #15171B;
+    --muted:     #6E6C63;
+    --line:      #D6D4CC;
+    --line-soft: #E4E2DB;
+    --accent:    #B45309;
+    --accent-ink:#8A3D06;
+    --accent-bg: #FDF3E0;
+    --shadow:    0 1px 2px rgba(20,22,26,.06), 0 8px 24px -16px rgba(20,22,26,.24);
+    --font-sans: ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg:        #0C0E12;
+      --surface:   #14181E;
+      --ink:       #ECEBE5;
+      --muted:     #918F86;
+      --line:      #272C34;
+      --line-soft: #1D222A;
+      --accent:    #F5B841;
+      --accent-ink:#F7C766;
+      --accent-bg: #241C0C;
+      --shadow:    0 1px 2px rgba(0,0,0,.5), 0 8px 24px -16px rgba(0,0,0,.8);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg:        #0C0E12;
+    --surface:   #14181E;
+    --ink:       #ECEBE5;
+    --muted:     #918F86;
+    --line:      #272C34;
+    --line-soft: #1D222A;
+    --accent:    #F5B841;
+    --accent-ink:#F7C766;
+    --accent-bg: #241C0C;
+    --shadow:    0 1px 2px rgba(0,0,0,.5), 0 8px 24px -16px rgba(0,0,0,.8);
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    line-height: 1.6;
+    margin: 0;
+    padding: clamp(24px, 5vw, 64px) clamp(20px, 5vw, 48px) 72px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1060px; margin: 0 auto; display: flex; flex-direction: column; gap: 40px; }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+    margin: 0 0 12px;
+  }
+  h1 {
+    font-size: clamp(30px, 5vw, 46px);
+    line-height: 1.05;
+    letter-spacing: -.028em;
+    font-weight: 800;
+    margin: 0 0 14px;
+    text-wrap: balance;
+  }
+  .lede {
+    font-size: clamp(16px, 2vw, 18.5px);
+    color: var(--muted);
+    max-width: 62ch;
+    margin: 0;
+  }
+  .lede strong { color: var(--ink); font-weight: 650; }
+
+  figure { margin: 0; }
+  .canvas {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    box-shadow: var(--shadow);
+    padding: clamp(14px, 2.4vw, 26px);
+    overflow-x: auto;
+  }
+  .canvas svg { display: block; width: 100%; min-width: 720px; height: auto; }
+  figcaption {
+    font-size: 14px;
+    color: var(--muted);
+    margin-top: 14px;
+    max-width: 70ch;
+  }
+
+  /* ---- diagram styling (kept out of the SVG so it themes) ---- */
+  .box       { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
+  .box-titan { fill: var(--accent-bg); stroke: var(--accent); stroke-width: 2; }
+  .flow      { stroke: var(--ink); stroke-width: 1.6; fill: none; }
+  .tie       { stroke: var(--accent); stroke-width: 1.6; stroke-dasharray: 5 5; fill: none; }
+  .rule      { stroke: var(--line); stroke-width: 1; }
+  .t-title   { font-family: var(--font-mono); font-size: 13.5px; font-weight: 700; fill: var(--ink); letter-spacing: .02em; }
+  .t-titan   { font-family: var(--font-mono); font-size: 13.5px; font-weight: 700; fill: var(--accent-ink); letter-spacing: .02em; }
+  .t-sub     { font-family: var(--font-mono); font-size: 10.5px; fill: var(--muted); }
+  .t-arrow   { font-family: var(--font-mono); font-size: 10px; fill: var(--muted); }
+  .t-step    { font-family: var(--font-mono); font-size: 11.5px; font-weight: 700; fill: var(--ink); letter-spacing: .14em; }
+  .t-when    { font-family: var(--font-mono); font-size: 10.5px; fill: var(--muted); letter-spacing: .04em; }
+  .t-tie     { font-family: var(--font-mono); font-size: 11px; font-weight: 700; fill: var(--accent-ink); letter-spacing: .06em; }
+  .t-tie-sub { font-family: var(--font-mono); font-size: 10px; fill: var(--muted); }
+  .t-panel-h { font-family: var(--font-mono); font-size: 10.5px; fill: var(--muted); letter-spacing: .16em; }
+  .t-role    { font-family: var(--font-mono); font-size: 12.5px; font-weight: 700; fill: var(--accent-ink); }
+  .t-does    { font-family: var(--font-sans); font-size: 13px; fill: var(--ink); }
+  .arrowhead { fill: var(--ink); }
+  .arrowhead-a { fill: var(--accent); }
+
+  /* ---- speaker notes ---- */
+  .notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+  .note { background: var(--surface); padding: 22px 22px 24px; }
+  .note h3 { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent-ink); margin: 0 0 10px; font-weight: 700; }
+  .note p { margin: 0; font-size: 14.5px; color: var(--ink); }
+  .note p + p { margin-top: 9px; color: var(--muted); }
+  .note code { font-family: var(--font-mono); font-size: .88em; background: var(--accent-bg); color: var(--accent-ink); padding: 1px 5px; border-radius: 3px; }
+
+  .explain { display: grid; grid-template-columns: minmax(0, 1fr); gap: 26px; }
+  @media (min-width: 780px) { .explain { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 40px; } }
+  .explain h2 { font-size: clamp(21px, 2.6vw, 26px); letter-spacing: -.022em; font-weight: 750; margin: 0 0 14px; text-wrap: balance; }
+  .explain p { margin: 0 0 14px; font-size: 15.5px; max-width: 60ch; }
+  .explain p:last-child { margin-bottom: 0; }
+  .explain .muted { color: var(--muted); }
+  .explain .muted strong, .explain strong { color: var(--ink); font-weight: 650; }
+  .explain em { font-style: italic; }
+  .explain code, .foot code { font-family: var(--font-mono); font-size: .88em; background: var(--accent-bg); color: var(--accent-ink); padding: 1px 5px; border-radius: 3px; }
+  .vec {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    line-height: 1.9;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 18px 20px;
+    overflow-x: auto;
+    white-space: pre;
+    margin: 0 0 18px;
+  }
+  .vec b { color: var(--accent-ink); font-weight: 700; }
+  .vec span { color: var(--muted); }
+  .dims { display: flex; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+  .dims div { background: var(--surface); padding: 14px 16px; flex: 1 1 0; }
+  .dims dt { font-family: var(--font-mono); font-size: 17px; font-weight: 700; letter-spacing: -.02em; margin: 0 0 3px; font-variant-numeric: tabular-nums; }
+  .dims dd { margin: 0; font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .dims .on dt { color: var(--accent-ink); }
+
+  .callout {
+    border: 1px solid var(--line);
+    background: var(--accent-bg);
+    padding: 22px 24px 24px;
+    border-radius: 4px;
+  }
+  .callout .eyebrow { margin-bottom: 8px; }
+  .callout h3 { margin: 0 0 8px; font-size: 16px; font-weight: 750; letter-spacing: -.01em; }
+  .callout p { margin: 0; font-size: 14.5px; color: var(--ink); max-width: 74ch; }
+
+  .money { display: flex; flex-wrap: wrap; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+  .money div { background: var(--surface); padding: 18px 22px; flex: 1 1 190px; }
+  .money dt { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
+  .money dd { margin: 0; font-family: var(--font-mono); font-size: 22px; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .money .hi dd { color: var(--accent-ink); }
+  .money dd span {
+    display: block;
+    font-family: var(--font-sans);
+    font-size: 12.5px;
+    font-weight: 400;
+    letter-spacing: 0;
+    color: var(--muted);
+    margin-top: 5px;
+  }
+  .foot { font-size: 13px; color: var(--muted); margin: 14px 0 0; max-width: 78ch; }
+  .foot strong { color: var(--ink); font-weight: 650; font-family: var(--font-mono); font-size: .95em; }
+  .wrap > .foot { margin-top: 0; }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Formação AWS · Amazon Bedrock · Aula 12</p>
+    <h1>Onde o Titan entra no RAG</h1>
+    <p class="lede">O modelo de embedding roda <strong>duas vezes</strong>: uma na ingestão dos documentos, outra em toda pergunta. Ele não busca nada — só traduz texto para 1.024 números. Quem procura é o índice.</p>
+  </header>
+
+  <figure>
+    <div class="canvas">
+      <svg viewBox="0 0 980 720" role="img" aria-label="Fluxo de RAG em três etapas: na ingestão, os documentos do S3 passam pelo chunker, pelo Titan e viram vetores no índice S3 Vectors; na consulta, a pergunta do lead passa pelo mesmo Titan e vira um vetor que o índice compara; o índice entrega os chunks aprovados ao Claude, que escreve a resposta.">
+        <defs>
+          <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" class="arrowhead" />
+          </marker>
+          <marker id="ah-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" class="arrowhead-a" />
+          </marker>
+        </defs>
+
+        <!-- ============ FAIXA 1 · INGESTÃO ============ -->
+        <text class="t-step" x="40" y="26">1 · INGESTÃO</text>
+        <text class="t-when" x="176" y="26">roda 1× por sync</text>
+        <line class="rule" x1="330" y1="22" x2="940" y2="22" />
+
+        <rect class="box" x="40"  y="52" width="170" height="80" rx="3" />
+        <text class="t-title" x="125" y="86"  text-anchor="middle">12 docs .md</text>
+        <text class="t-sub"   x="125" y="105" text-anchor="middle">bucket S3</text>
+        <text class="t-sub"   x="125" y="120" text-anchor="middle">5.009 tokens</text>
+
+        <rect class="box" x="266" y="52" width="150" height="80" rx="3" />
+        <text class="t-title" x="341" y="86"  text-anchor="middle">chunker</text>
+        <text class="t-sub"   x="341" y="105" text-anchor="middle">300 tokens</text>
+        <text class="t-sub"   x="341" y="120" text-anchor="middle">20% overlap</text>
+
+        <rect class="box-titan" x="472" y="52" width="170" height="80" rx="3" />
+        <text class="t-titan" x="557" y="86"  text-anchor="middle">TITAN v2</text>
+        <text class="t-sub"   x="557" y="105" text-anchor="middle">texto → vetor</text>
+        <text class="t-sub"   x="557" y="120" text-anchor="middle">de 1.024</text>
+
+        <rect class="box" x="698" y="52" width="242" height="80" rx="3" />
+        <text class="t-title" x="819" y="86"  text-anchor="middle">ÍNDICE · S3 VECTORS</text>
+        <text class="t-sub"   x="819" y="105" text-anchor="middle">~21 vetores · 115 KB</text>
+        <text class="t-sub"   x="819" y="120" text-anchor="middle">vetor + texto do chunk</text>
+
+        <line class="flow" x1="210" y1="92" x2="260" y2="92" marker-end="url(#ah)" />
+        <text class="t-arrow" x="235" y="80" text-anchor="middle">13,5 KB</text>
+        <line class="flow" x1="416" y1="92" x2="466" y2="92" marker-end="url(#ah)" />
+        <text class="t-arrow" x="441" y="80" text-anchor="middle">21 chunks</text>
+        <line class="flow" x1="642" y1="92" x2="692" y2="92" marker-end="url(#ah)" />
+        <text class="t-arrow" x="667" y="80" text-anchor="middle">grava</text>
+
+        <!-- ============ ZONA CENTRAL ============ -->
+        <text class="t-panel-h" x="40" y="196">DIVISÃO DE TRABALHO</text>
+        <line class="rule" x1="40" y1="208" x2="400" y2="208" />
+
+        <text class="t-role" x="40" y="240">TITAN</text>
+        <text class="t-does" x="40" y="260">converte texto em números</text>
+        <text class="t-role" x="40" y="298">ÍNDICE</text>
+        <text class="t-does" x="40" y="318">compara e ordena por proximidade</text>
+        <text class="t-role" x="40" y="356">CLAUDE</text>
+        <text class="t-does" x="40" y="376">lê os vencedores e escreve</text>
+
+        <!-- amarração 1: mesmo modelo -->
+        <line class="tie" x1="557" y1="132" x2="557" y2="266" />
+        <text class="t-tie"     x="557" y="288" text-anchor="middle">MESMO MODELO</text>
+        <text class="t-tie-sub" x="557" y="305" text-anchor="middle">nos dois momentos</text>
+        <line class="tie" x1="557" y1="322" x2="557" y2="438" />
+
+        <!-- amarração 2: mesmo índice -->
+        <line class="tie" x1="819" y1="132" x2="819" y2="330" />
+        <text class="t-tie"     x="819" y="352" text-anchor="middle">MESMO ÍNDICE</text>
+        <text class="t-tie-sub" x="819" y="369" text-anchor="middle">escrito 1× · lido sempre</text>
+        <line class="tie" x1="819" y1="386" x2="819" y2="432" marker-end="url(#ah-a)" />
+
+        <!-- ============ FAIXA 2 · CONSULTA ============ -->
+        <text class="t-step" x="40" y="474">2 · CONSULTA</text>
+        <text class="t-when" x="176" y="474">roda em toda pergunta</text>
+        <line class="rule" x1="330" y1="470" x2="940" y2="470" />
+
+        <rect class="box" x="40"  y="500" width="170" height="80" rx="3" />
+        <text class="t-title" x="125" y="534" text-anchor="middle">pergunta</text>
+        <text class="t-sub"   x="125" y="553" text-anchor="middle">do lead</text>
+        <text class="t-sub"   x="125" y="568" text-anchor="middle">~40 tokens</text>
+
+        <rect class="box-titan" x="472" y="500" width="170" height="80" rx="3" />
+        <text class="t-titan" x="557" y="534" text-anchor="middle">TITAN v2</text>
+        <text class="t-sub"   x="557" y="553" text-anchor="middle">texto → vetor</text>
+        <text class="t-sub"   x="557" y="568" text-anchor="middle">de 1.024</text>
+
+        <rect class="box" x="698" y="500" width="242" height="80" rx="3" />
+        <text class="t-title" x="819" y="534" text-anchor="middle">ÍNDICE · compara</text>
+        <text class="t-sub"   x="819" y="553" text-anchor="middle">cosseno contra os 21</text>
+        <text class="t-sub"   x="819" y="568" text-anchor="middle">devolve score por chunk</text>
+
+        <line class="flow" x1="210" y1="540" x2="466" y2="540" marker-end="url(#ah)" />
+        <text class="t-arrow" x="338" y="528" text-anchor="middle">texto cru</text>
+        <line class="flow" x1="642" y1="540" x2="692" y2="540" marker-end="url(#ah)" />
+        <text class="t-arrow" x="667" y="528" text-anchor="middle">vetor</text>
+
+        <!-- ============ FAIXA 3 · RESPOSTA ============ -->
+        <line class="flow" x1="819" y1="580" x2="819" y2="630" marker-end="url(#ah)" />
+        <text class="t-arrow" x="806" y="598" text-anchor="end">top-K = 3</text>
+        <text class="t-arrow" x="806" y="613" text-anchor="end">score ≥ 0,6</text>
+
+        <text class="t-step"  x="40" y="668">3 · RESPOSTA</text>
+        <text class="t-does"  x="40" y="692">só os chunks aprovados vão pro prompt,</text>
+        <text class="t-does"  x="40" y="710">dentro da mensagem do usuário</text>
+
+        <rect class="box" x="698" y="636" width="242" height="72" rx="3" />
+        <text class="t-title" x="819" y="668" text-anchor="middle">CLAUDE SONNET</text>
+        <text class="t-sub"   x="819" y="687" text-anchor="middle">escreve citando a fonte</text>
+      </svg>
+    </div>
+    <figcaption>O Titan aparece nas duas faixas porque comparar vetores só faz sentido se documento e pergunta forem traduzidos pelo mesmo modelo. As linhas tracejadas marcam o que é reaproveitado: o modelo (identidade) e o índice (escrito uma vez, lido sempre).</figcaption>
+  </figure>
+
+  <div class="notes">
+    <div class="note">
+      <h3>Na ingestão</h3>
+      <p>21 chamadas ao Titan, uma por chunk. Cada uma devolve 1.024 floats — 4 KB de vetor, mais o texto do chunk guardado na metadata.</p>
+      <p>Acontece uma vez por sync. Editou o documento? Roda de novo, senão o agente responde o valor antigo.</p>
+    </div>
+    <div class="note">
+      <h3>Na consulta</h3>
+      <p>1 chamada ao Titan, na pergunta. O índice mede o cosseno contra os 21 vetores e devolve os mais próximos com <code>score</code>.</p>
+      <p>Aqui o Titan sai de cena. Ele não entende a pergunta, não escolhe e não responde.</p>
+    </div>
+    <div class="note">
+      <h3>Quem chama o Titan</h3>
+      <p>A Knowledge Base, nas duas pontas — você nunca faz <code>InvokeModel</code> no Titan.</p>
+      <p>Por isso a role IAM precisa de <code>bedrock:InvokeModel</code> no Titan: é a KB usando a sua permissão.</p>
+    </div>
+  </div>
+
+  <section class="explain">
+    <div>
+      <h2>O que são os 1.024 números</h2>
+      <p>É uma <strong>coordenada</strong>. Latitude e longitude são dois números que localizam um ponto na Terra: quem tem coordenadas parecidas está fisicamente perto. Aqui são 1.024 números que localizam um <em>significado</em> — textos com números parecidos falam de coisas parecidas.</p>
+      <p class="muted">A diferença para o GPS é que <strong>nenhum dos 1.024 eixos tem nome</strong>. O número 417 não é "preço", o 892 não é "urgência". Eles saíram do treinamento do modelo e não são legíveis isoladamente: o que carrega sentido é a direção do vetor inteiro.</p>
+      <p class="muted">Por isso o <code>score</code> é a única alça que você tem. Não dá para abrir um vetor e depurar olhando — você mede o ângulo entre dois e pronto.</p>
+    </div>
+    <div>
+      <p class="vec"><b>"Ingresso VIP: R$ 97..."</b>
+   <span>↓ Titan</span>
+[0.021, -0.334, 0.512, ..., 0.088]
+ <span>└────── 1.024 floats · 4 KB ──────┘</span></p>
+      <dl class="dims">
+        <div class="on"><dt>1.024</dt><dd>padrão do Titan v2 — mais nuance, índice maior</dd></div>
+        <div><dt>512</dt><dd>meio-termo</dd></div>
+        <div><dt>256</dt><dd>índice menor e busca mais barata, menos precisão</dd></div>
+      </dl>
+      <p class="muted" style="margin-top:14px;font-size:13.5px">Sempre 1.024 números, seja um chunk de 300 tokens ou a palavra "oi". A dimensão do índice nasce colada nessa escolha — mudar depois exige índice novo.</p>
+    </div>
+  </section>
+
+  <div class="callout">
+    <p class="eyebrow">Falha silenciosa</p>
+    <h3>A escolha de mão única</h3>
+    <p>O modelo de embedding fica preso ao índice: a dimensão foi criada para ele, e vetores de modelos diferentes não são comparáveis nem quando a dimensão bate. Trocar de embedder depois significa índice novo e reingestão completa. E a falha é silenciosa — se ingestão e consulta usarem modelos diferentes, não dá erro nenhum: a busca devolve chunk aleatório e o agente responde bobagem com toda a confiança.</p>
+  </div>
+
+  <div>
+    <p class="eyebrow">Preço de tabela · us-east-1</p>
+    <dl class="money">
+      <div class="hi"><dt>Titan Embeddings v2</dt><dd>$0,02<span>por 1M de tokens</span></dd></div>
+      <div><dt>S3 Vectors · consulta</dt><dd>$2,50<span>por 1M de consultas</span></dd></div>
+      <div><dt>S3 Vectors · storage</dt><dd>$0,06<span>por GB-mês</span></dd></div>
+      <div><dt>S3 · storage dos docs</dt><dd>$0,023<span>por GB-mês</span></dd></div>
+    </dl>
+    <p class="foot">Uma pergunta de ~40 tokens custa <strong>$0,0000008</strong> de embedding. Um milhão de perguntas custa <strong>$0,80</strong>. O índice inteiro deste exemplo — 21 vetores, 115 KB — ocupa uma fração de centavo por mês.</p>
+  </div>
+
+  <p class="foot">Tokens medidos com <code>count-tokens</code> nos arquivos do projeto. Preços do Titan e do S3 confirmados na AWS Pricing API; S3 Vectors, na página oficial de preços do S3. Confira antes de usar — tabela de preço muda.</p>
+
+</div>

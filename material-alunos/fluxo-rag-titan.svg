@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 720" width="980" height="720" role="img" aria-label="Fluxo de RAG em três etapas: na ingestão, os documentos do S3 passam pelo chunker, pelo Titan e viram vetores no índice S3 Vectors; na consulta, a pergunta do lead passa pelo mesmo Titan e vira um vetor que o índice compara; o índice entrega os chunks aprovados ao Claude, que escreve a resposta.">
+        <defs>
+          <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" class="arrowhead" />
+          </marker>
+          <marker id="ah-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" class="arrowhead-a" />
+          </marker>
+        </defs>
+  <style>
+    :root{--surface:#FFFFFF;--ink:#15171B;--muted:#6E6C63;--line:#D6D4CC;--accent:#B45309;--accent-ink:#8A3D06;--accent-bg:#FDF3E0;
+      --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;--sans:ui-sans-serif,system-ui,"Helvetica Neue",Arial,sans-serif;}
+    @media (prefers-color-scheme: dark){:root{--surface:#14181E;--ink:#ECEBE5;--muted:#918F86;--line:#272C34;--accent:#F5B841;--accent-ink:#F7C766;--accent-bg:#241C0C;}}
+    .bgplate{fill:var(--surface)}
+    .box{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+    .box-titan{fill:var(--accent-bg);stroke:var(--accent);stroke-width:2}
+    .flow{stroke:var(--ink);stroke-width:1.6;fill:none}
+    .tie{stroke:var(--accent);stroke-width:1.6;stroke-dasharray:5 5;fill:none}
+    .rule{stroke:var(--line);stroke-width:1}
+    .t-title{font-family:var(--mono);font-size:13.5px;font-weight:700;fill:var(--ink);letter-spacing:.02em}
+    .t-titan{font-family:var(--mono);font-size:13.5px;font-weight:700;fill:var(--accent-ink);letter-spacing:.02em}
+    .t-sub{font-family:var(--mono);font-size:10.5px;fill:var(--muted)}
+    .t-arrow{font-family:var(--mono);font-size:10px;fill:var(--muted)}
+    .t-step{font-family:var(--mono);font-size:11.5px;font-weight:700;fill:var(--ink);letter-spacing:.14em}
+    .t-when{font-family:var(--mono);font-size:10.5px;fill:var(--muted);letter-spacing:.04em}
+    .t-tie{font-family:var(--mono);font-size:11px;font-weight:700;fill:var(--accent-ink);letter-spacing:.06em}
+    .t-tie-sub{font-family:var(--mono);font-size:10px;fill:var(--muted)}
+    .t-panel-h{font-family:var(--mono);font-size:10.5px;fill:var(--muted);letter-spacing:.16em}
+    .t-role{font-family:var(--mono);font-size:12.5px;font-weight:700;fill:var(--accent-ink)}
+    .t-does{font-family:var(--sans);font-size:13px;fill:var(--ink)}
+    .arrowhead{fill:var(--ink)}
+    .arrowhead-a{fill:var(--accent)}
+  </style>
+  <rect class="bgplate" x="0" y="0" width="980" height="720"/>
+
+
+        <!-- ============ FAIXA 1 · INGESTÃO ============ -->
+        <text class="t-step" x="40" y="26">1 · INGESTÃO</text>
+        <text class="t-when" x="176" y="26">roda 1× por sync</text>
+        <line class="rule" x1="330" y1="22" x2="940" y2="22" />
+
+        <rect class="box" x="40"  y="52" width="170" height="80" rx="3" />
+        <text class="t-title" x="125" y="86"  text-anchor="middle">12 docs .md</text>
+        <text class="t-sub"   x="125" y="105" text-anchor="middle">bucket S3</text>
+        <text class="t-sub"   x="125" y="120" text-anchor="middle">5.009 tokens</text>
+
+        <rect class="box" x="266" y="52" width="150" height="80" rx="3" />
+        <text class="t-title" x="341" y="86"  text-anchor="middle">chunker</text>
+        <text class="t-sub"   x="341" y="105" text-anchor="middle">300 tokens</text>
+        <text class="t-sub"   x="341" y="120" text-anchor="middle">20% overlap</text>
+
+        <rect class="box-titan" x="472" y="52" width="170" height="80" rx="3" />
+        <text class="t-titan" x="557" y="86"  text-anchor="middle">TITAN v2</text>
+        <text class="t-sub"   x="557" y="105" text-anchor="middle">texto → vetor</text>
+        <text class="t-sub"   x="557" y="120" text-anchor="middle">de 1.024</text>
+
+        <rect class="box" x="698" y="52" width="242" height="80" rx="3" />
+        <text class="t-title" x="819" y="86"  text-anchor="middle">ÍNDICE · S3 VECTORS</text>
+        <text class="t-sub"   x="819" y="105" text-anchor="middle">~21 vetores · 115 KB</text>
+        <text class="t-sub"   x="819" y="120" text-anchor="middle">vetor + texto do chunk</text>
+
+        <line class="flow" x1="210" y1="92" x2="260" y2="92" marker-end="url(#ah)" />
+        <text class="t-arrow" x="235" y="80" text-anchor="middle">13,5 KB</text>
+        <line class="flow" x1="416" y1="92" x2="466" y2="92" marker-end="url(#ah)" />
+        <text class="t-arrow" x="441" y="80" text-anchor="middle">21 chunks</text>
+        <line class="flow" x1="642" y1="92" x2="692" y2="92" marker-end="url(#ah)" />
+        <text class="t-arrow" x="667" y="80" text-anchor="middle">grava</text>
+
+        <!-- ============ ZONA CENTRAL ============ -->
+        <text class="t-panel-h" x="40" y="196">DIVISÃO DE TRABALHO</text>
+        <line class="rule" x1="40" y1="208" x2="400" y2="208" />
+
+        <text class="t-role" x="40" y="240">TITAN</text>
+        <text class="t-does" x="40" y="260">converte texto em números</text>
+        <text class="t-role" x="40" y="298">ÍNDICE</text>
+        <text class="t-does" x="40" y="318">compara e ordena por proximidade</text>
+        <text class="t-role" x="40" y="356">CLAUDE</text>
+        <text class="t-does" x="40" y="376">lê os vencedores e escreve</text>
+
+        <!-- amarração 1: mesmo modelo -->
+        <line class="tie" x1="557" y1="132" x2="557" y2="266" />
+        <text class="t-tie"     x="557" y="288" text-anchor="middle">MESMO MODELO</text>
+        <text class="t-tie-sub" x="557" y="305" text-anchor="middle">nos dois momentos</text>
+        <line class="tie" x1="557" y1="322" x2="557" y2="438" />
+
+        <!-- amarração 2: mesmo índice -->
+        <line class="tie" x1="819" y1="132" x2="819" y2="330" />
+        <text class="t-tie"     x="819" y="352" text-anchor="middle">MESMO ÍNDICE</text>
+        <text class="t-tie-sub" x="819" y="369" text-anchor="middle">escrito 1× · lido sempre</text>
+        <line class="tie" x1="819" y1="386" x2="819" y2="432" marker-end="url(#ah-a)" />
+
+        <!-- ============ FAIXA 2 · CONSULTA ============ -->
+        <text class="t-step" x="40" y="474">2 · CONSULTA</text>
+        <text class="t-when" x="176" y="474">roda em toda pergunta</text>
+        <line class="rule" x1="330" y1="470" x2="940" y2="470" />
+
+        <rect class="box" x="40"  y="500" width="170" height="80" rx="3" />
+        <text class="t-title" x="125" y="534" text-anchor="middle">pergunta</text>
+        <text class="t-sub"   x="125" y="553" text-anchor="middle">do lead</text>
+        <text class="t-sub"   x="125" y="568" text-anchor="middle">~40 tokens</text>
+
+        <rect class="box-titan" x="472" y="500" width="170" height="80" rx="3" />
+        <text class="t-titan" x="557" y="534" text-anchor="middle">TITAN v2</text>
+        <text class="t-sub"   x="557" y="553" text-anchor="middle">texto → vetor</text>
+        <text class="t-sub"   x="557" y="568" text-anchor="middle">de 1.024</text>
+
+        <rect class="box" x="698" y="500" width="242" height="80" rx="3" />
+        <text class="t-title" x="819" y="534" text-anchor="middle">ÍNDICE · compara</text>
+        <text class="t-sub"   x="819" y="553" text-anchor="middle">cosseno contra os 21</text>
+        <text class="t-sub"   x="819" y="568" text-anchor="middle">devolve score por chunk</text>
+
+        <line class="flow" x1="210" y1="540" x2="466" y2="540" marker-end="url(#ah)" />
+        <text class="t-arrow" x="338" y="528" text-anchor="middle">texto cru</text>
+        <line class="flow" x1="642" y1="540" x2="692" y2="540" marker-end="url(#ah)" />
+        <text class="t-arrow" x="667" y="528" text-anchor="middle">vetor</text>
+
+        <!-- ============ FAIXA 3 · RESPOSTA ============ -->
+        <line class="flow" x1="819" y1="580" x2="819" y2="630" marker-end="url(#ah)" />
+        <text class="t-arrow" x="806" y="598" text-anchor="end">top-K = 3</text>
+        <text class="t-arrow" x="806" y="613" text-anchor="end">score ≥ 0,6</text>
+
+        <text class="t-step"  x="40" y="668">3 · RESPOSTA</text>
+        <text class="t-does"  x="40" y="692">só os chunks aprovados vão pro prompt,</text>
+        <text class="t-does"  x="40" y="710">dentro da mensagem do usuário</text>
+
+        <rect class="box" x="698" y="636" width="242" height="72" rx="3" />
+        <text class="t-title" x="819" y="668" text-anchor="middle">CLAUDE SONNET</text>
+        <text class="t-sub"   x="819" y="687" text-anchor="middle">escreve citando a fonte</text>
+      </svg>
