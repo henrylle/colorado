@@ -32,7 +32,7 @@ const client = new BedrockRuntimeClient({
 });
 
 // [RAG] ────────────────────────────────────────────────────────────────
-const KB_ID = "SEU_KB"; // KB com S3 Vectors
+const KB_ID = "OX7M23XOGK"; // KB com S3 Vectors
 const TOP_K = 20; // quantos trechos trazer por busca
 
 // Corte por score. Abaixo disso o trecho entra como ruído no contexto.
