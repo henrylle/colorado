@@ -4,3 +4,12 @@ scripts/sdk-node-exemplo/*
 package-lock.json
 apoio/*
 .DS_Store
+docs-rag-curado/
+.venv-pdf/
+
+# logs de execução — contêm conversas de teste
+*.log
+
+# material com senha: é o produto pago, e o repositório é público.
+# O HTML fonte fica versionado; o PDF gerado, não.
+material-alunos/*.pdf
